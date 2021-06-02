@@ -1,0 +1,41 @@
+<div id="model-viewer-container" class="flex">
+    <div id="controls-container" class="flex">
+        <button (click)="fileInput.click()">Select OBJ</button>
+        <input #fileInput hidden type="file" accept=".obj" (change)="parseObjFile($event)" />
+        
+        <button (click)="zipInput.click()">Select ZIP</button>
+        <input #zipInput hidden type="file" accept=".zip" (change)="loadFromZip($event)" />
+    
+        <button (click)="loadExampleCube()">Load Example Cube</button>
+        <button (click)="loadFromServer()">Load Server Model</button>
+        <button (click)="resetView()">Reset</button>
+
+        <div class="flex-spacer"></div>
+
+        <div id="arrow-container">
+            <button id="up-arrow" (click)="moveModel('up')">Up</button>
+            <button id="down-arrow" (click)="moveModel('down')">Down</button>
+            <button id="center" (click)="threeComponent.resetRootTransform()">&lt;|&gt;</button>
+            <button id="left-arrow" (click)="moveModel('left')">Left</button>
+            <button id="right-arrow" (click)="moveModel('right')">Right</button>
+        </div>
+        <button (click)="zoom('in')">+</button>
+        <button (click)="zoom('out')">-</button>
+
+        <div class="flex-spacer"></div>
+
+        <button (click)="takeDistanceMeasurement()">Take Distance Measurement</button>
+        <button (click)="takeAngleMeasurement()">Take Angle Measurement</button>
+        <button (click)="takeCrossSectionMeasurement()">Take Cross-Section</button>
+        <button (click)="addCrossSectionMesh()">Add Cross-Section Mesh</button>
+
+        <div *ngIf="measurement != null">
+            <p>Value: {{measurement?.value | number:'.2-2'}}</p>
+        </div>
+    </div>
+
+    <app-three #threeComponent
+               (clickEvent)="handleClick($event)"
+               (dragEvent)="handleDrag($event)">
+    </app-three>
+</div>

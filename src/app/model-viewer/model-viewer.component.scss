@@ -1,0 +1,40 @@
+button {
+    margin: 2px
+}
+
+#controls-container {
+    flex-direction: column;
+    margin: 5px;
+}
+
+#arrow-container {
+    display: grid;
+    margin-top: 10px;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto;
+}
+
+#up-arrow {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+#down-arrow {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+#left-arrow {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+#right-arrow {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+#center {
+    grid-column: 2;
+    grid-row: 2;
+}
