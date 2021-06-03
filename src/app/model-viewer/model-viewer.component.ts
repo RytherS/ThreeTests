@@ -146,16 +146,19 @@ export class ModelViewerComponent implements OnInit, AfterViewInit {
                                 );
     }
 
-    public loadFromZip(fileEvent: Event): void {
+    // "Select ZIP" button
+    public async loadFromZip(fileEvent: Event): Promise<void> {
         const element = fileEvent.currentTarget as HTMLInputElement;
         let files: FileList | null = element?.files;
 
         if (files != null && files[0] != null) {
             let zipFile = files[0];
-            ThreeUtils.loadObjFromZip(zipFile, (obj: Object3D) => {
+            let zipObj = await ThreeUtils.loadObjFromZip(zipFile);
+
+            if (zipObj != null) {
                 this.resetView();
-                this.setModelMesh(obj);
-            });
+                this.setModelMesh(zipObj);
+            }
         }
     }
 

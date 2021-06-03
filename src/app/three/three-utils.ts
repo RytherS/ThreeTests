@@ -3,6 +3,7 @@ import { CSG } from "three-csg-ts";
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import * as JSZip from "jszip";
+import { conditionallyCreateMapObjectLiteral } from "@angular/compiler/src/render3/view/util";
 
 // Some of this may be useless/overkill, but I have been doing a ton of playing around, so it is just a little messy from various stages of tinkering ':D
 export class ThreeUtils {
@@ -82,15 +83,20 @@ export class ThreeUtils {
                         (error) => console.log(`Error Loading MTL: ${error.message}`));
     }
 
-    // May require some fenagling to cover different zip scenarios (unless we are going to guarantee uniformity, of course. Do we already?)
-    public static async loadObjFromZip(zipFile: File, successCallback: Function): Promise<void> {
-        if (zipFile.type != "application/x-zip-compressed") return;
+    public static async loadObjFromZip(zipFile: File): Promise<Object3D | null> {
+        if (zipFile.type != "application/x-zip-compressed") return null;
 
         let unzippedData: JSZip = new JSZip();
         await unzippedData.loadAsync(zipFile);
+        
+        let mtlFileName: string | null = null;
+        let objFileName: string | null = null;
 
         let fileMap: Map<string, Uint8Array> = new Map<string, Uint8Array>();
         for (let url in unzippedData.files) {
+            if (url.endsWith(".mtl")) mtlFileName = url;
+            if (url.endsWith(".obj")) objFileName = url;
+
             let buffer = await unzippedData.files[url].async("uint8array");
             fileMap.set(url, buffer);
         }
@@ -107,18 +113,29 @@ export class ThreeUtils {
             return url;
         });
 
-        let mtlText = await unzippedData.file("textured.mtl")?.async("text");
-        let mtlLoader = new MTLLoader(loadingManager);
-        let materials = mtlLoader.parse(mtlText ?? "", "");
+        let materials: MTLLoader.MaterialCreator | null = null;
+        if (mtlFileName != null) {
+            let mtlText = await unzippedData.file(mtlFileName)?.async("text");
+            let mtlLoader = new MTLLoader(loadingManager);
+            let basePath: string = mtlFileName.substr(0, mtlFileName.lastIndexOf("/") + 1);
 
-        let objText = await unzippedData.file("textured.obj")?.async("text");
-        let objLoader = await new OBJLoader(loadingManager);
-        objLoader.setMaterials(materials);
-        let obj = await objLoader.parse(objText ?? "");
-
-        if (obj != null) {
-            successCallback(obj);
+            materials = mtlLoader.parse(mtlText ?? "", basePath);
+            materials.preload();
         }
+
+        let obj: Object3D | null = null;
+        if (objFileName != null) {
+            let objText = await unzippedData.file(objFileName)?.async("text");
+            let objLoader = await new OBJLoader(loadingManager);
+
+            if (materials != null) {
+                objLoader.setMaterials(materials);
+            }
+
+            obj = await objLoader.parse(objText ?? "");
+        }
+
+        return obj;
     }
 
     /**
